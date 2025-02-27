@@ -12,18 +12,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
 from utils.browser import initialize_browser
 from utils.image_utils import read_search_queries, download_image
-# Importer la configuration
 from config import WEBDRIVER_PATH, IMAGES_OUTPUT_DIR, REPORTS_OUTPUT_DIR, SEARCH_QUERIES_FILE
 
-# Utiliser le chemin absolu de la configuration
 path = WEBDRIVER_PATH
 
-# Utiliser les dossiers depuis la configuration
 img_dir = IMAGES_OUTPUT_DIR
 files_dir = REPORTS_OUTPUT_DIR
 img_inside_dir = IMAGES_OUTPUT_DIR
 
-# Créer les dossiers nécessaires s'ils n'existent pas
 for directory in [img_dir, files_dir, img_inside_dir]:
     os.makedirs(directory, exist_ok=True)
     print(f"Dossier vérifié : {directory}")
@@ -38,11 +34,9 @@ data_for_csv = []
 processed_texts = set()
 sites_to_visit = []
 
-# Utiliser le chemin absolu pour le CSV
 print(f"Tentative de lecture du CSV depuis : {SEARCH_QUERIES_FILE}")
 search_queries = read_search_queries(SEARCH_QUERIES_FILE)
 
-# Si search_queries est vide, afficher un message d'erreur
 if not search_queries:
     print(f"ERREUR: Aucune requête n'a été trouvée dans le fichier {SEARCH_QUERIES_FILE}")
     driver.quit()
@@ -54,11 +48,9 @@ def generate_random_color():
     b = random.randint(0, 255)
     return f"rgb({r}, {g}, {b})"
 
-# Fonction principale pour traiter une requête
 def process_search_query(query_data):
     global data_for_csv, processed_texts, sites_to_visit
     
-    # Réinitialiser les listes pour chaque nouvelle requête
     data_for_csv = []
     processed_texts = set()
     sites_to_visit = []
@@ -69,12 +61,10 @@ def process_search_query(query_data):
     print(f"\n\n==== Traitement de la requête : {query_term} (alt: {alt_keyword}) ====\n")
     
     try:
-        # Construire l'URL de recherche Google
         search_url = f"https://www.google.com/search?q={query_term.replace(' ', '+')}"
         driver.get(search_url)
         print(f"Page de recherche Google ouverte pour: {query_term}")
         
-        # Cliquer sur l'onglet Images
         wait = WebDriverWait(driver, 10)
         images_link = wait.until(
             EC.element_to_be_clickable((By.XPATH, "//a[text()='IMAGES']"))
@@ -85,7 +75,6 @@ def process_search_query(query_data):
         
         time.sleep(3)
         
-        # Traiter les éléments de la page
         divs_with_spans = driver.find_elements(By.XPATH, "//div[.//span]")
         print(f"Nombre de divs avec spans trouvées : {len(divs_with_spans)}")
         
@@ -151,13 +140,11 @@ def process_search_query(query_data):
         
         time.sleep(1)
         
-        # Prendre une capture d'écran
         query_slug = query_term.lower().replace(' ', '_')
         screenshot_path = os.path.join(img_dir, f"{query_slug}_paires_encadrees_{int(time.time())}.png")
         driver.save_screenshot(screenshot_path)
         print(f"Capture d'écran avec paires encadrées enregistrée : {screenshot_path}")
         
-        # Sauvegarder les données dans un fichier CSV
         csv_path = os.path.join(files_dir, f"{query_slug}_span_data_{int(time.time())}.csv")
         with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
             fieldnames = ['index', 'span_text']
@@ -168,7 +155,6 @@ def process_search_query(query_data):
         print(f"Données sauvegardées dans : {csv_path}")
         print(f"Nombre d'éléments uniques trouvés : {len(data_for_csv)}")
         
-        # Visiter les sites trouvés
         print(f"\nVisite des {len(sites_to_visit)} premiers sites pour la requête {query_term}:")
         
         for site_info in sites_to_visit:
